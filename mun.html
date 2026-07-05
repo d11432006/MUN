@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUN 生存指南：我們的模擬聯合國之旅</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=300;400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            touch-action: manipulation; /* 優化行動端與平板的點擊反應時間，消除雙擊延遲 */
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .un-blue-bg {
+            background: linear-gradient(135deg, #0b2545 0%, #134074 100%);
+        }
+        .un-gold {
+            color: #EEB902;
+        }
+        .un-gold-bg {
+            background-color: #EEB902;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes scaleUp {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-scaleUp {
+            animation: scaleUp 0.25s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col pb-16 md:pb-0">
+
+    <!-- 頂部導覽列 (透過 JS 動態控制顯示 class，完美相容 Iframe 嵌入) -->
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="un-blue-bg p-2 rounded-lg text-white">
+                        <i data-lucide="globe" class="w-6 h-6 text-amber-300 pointer-events-none"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-bold text-base sm:text-lg tracking-wide text-slate-900 leading-none">MUN 生存指南</span>
+                        <span class="text-xs text-slate-400 mt-1 font-medium">模擬聯合國多元選修</span>
+                    </div>
+                </div>
+                
+                <!-- 桌面與平板版選單 (由 JavaScript 動態切換 hidden/flex，避免擠壓) -->
+                <div id="desktop-menu" class="hidden space-x-1">
+                    <button onclick="switchTab('home')" id="btn-home" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-blue-800 bg-blue-50 transition-all cursor-pointer">
+                        <span class="flex items-center gap-1.5 pointer-events-none"><i data-lucide="help-circle" class="w-4 h-4"></i>What is MUN?</span>
+                    </button>
+                    <button onclick="switchTab('projects')" id="btn-projects" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer">
+                        <span class="flex items-center gap-1.5 pointer-events-none"><i data-lucide="check-square" class="w-4 h-4"></i>準備工作Check list</span>
+                    </button>
+                    <button onclick="switchTab('reflection')" id="btn-reflection" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer">
+                        <span class="flex items-center gap-1.5 pointer-events-none"><i data-lucide="book-open" class="w-4 h-4"></i>心得與反思</span>
+                    </button>
+                </div>
+                
+                <!-- 發表人資訊 (僅在容器寬度足夠時才由 JS 顯示) -->
+                <div id="nav-delegate-container" class="hidden items-center gap-2 bg-slate-100 py-1.5 px-3 rounded-full text-xs font-medium text-slate-600 pointer-events-none">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>報告代表：</span><span id="nav-delegate" class="text-blue-900 font-semibold">一射01丁苡涵、一射06吳羿君、一射09周柔蓒、一御14林冠汝</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 行動版與窄版嵌入底部導覽 (由 JavaScript 動態切換顯示) -->
+    <div id="mobile-menu" class="hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 py-2 px-4 justify-around">
+        <button onclick="switchTab('home')" class="flex flex-col items-center text-blue-800 cursor-pointer" id="m-btn-home">
+            <i data-lucide="help-circle" class="w-5 h-5 pointer-events-none"></i>
+            <span class="text-xs mt-1 font-medium pointer-events-none">What is MUN?</span>
+        </button>
+        <button onclick="switchTab('projects')" class="flex flex-col items-center text-slate-400 cursor-pointer" id="m-btn-projects">
+            <i data-lucide="check-square" class="w-5 h-5 pointer-events-none"></i>
+            <span class="text-xs mt-1 font-medium pointer-events-none">Check list</span>
+        </button>
+        <button onclick="switchTab('reflection')" class="flex flex-col items-center text-slate-400 cursor-pointer" id="m-btn-reflection">
+            <i data-lucide="book-open" class="w-5 h-5 pointer-events-none"></i>
+            <span class="text-xs mt-1 font-medium pointer-events-none">反思</span>
+        </button>
+    </div>
+
+    <!-- 主內容區 -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-16 md:mb-0">
+
+        <!-- 1. What is MUN? (Home Tab) -->
+        <div id="tab-home" class="tab-content active space-y-8 animate-fadeIn">
+            <!-- 英雄視覺區 -->
+            <div class="un-blue-bg rounded-2xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10">
+                    <i data-lucide="landmark" class="w-64 h-64 pointer-events-none"></i>
+                </div>
+                <span class="bg-amber-500/20 text-amber-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-amber-500/30">多元選修成果發表</span>
+                <h1 class="text-3xl sm:text-4xl font-extrabold mt-4 mb-2 tracking-tight" id="display-course-title">MUN生存指南：我們的模擬聯合國之旅</h1>
+                <p class="text-blue-100 text-sm sm:text-base max-w-2xl mb-6 leading-relaxed">歡迎來到代表的世界。這不僅僅是一門選修課，這是一趟跨越國界、鍛鍊理性批判與協商智慧的國際外交博弈旅程。</p>
+                <div class="flex flex-wrap gap-4 text-xs sm:text-sm">
+                    <div class="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                        <i data-lucide="user" class="w-4 h-4 text-amber-300 pointer-events-none"></i>
+                        <span id="display-teacher">指導老師：林佩萍、張依婷 老師</span>
+                    </div>
+                    <div class="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                        <i data-lucide="calendar" class="w-4 h-4 text-amber-300 pointer-events-none"></i>
+                        <span>時間：114學年度 第二學期</span>
+                    </div>
+                    <div class="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                        <i data-lucide="flag" class="w-4 h-4 text-amber-300 pointer-events-none"></i>
+                        <span>當前模擬議題：<span id="display-current-topic" class="font-bold text-amber-300">海洋汙染 Marine Debris</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MUN核心介紹三大區塊 - 靜態高質感卡片展示 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- 卡片一：Why 為什麼要舉辦模聯？ -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-800 flex items-center justify-center mb-4">
+                            <i data-lucide="help-circle" class="w-6 h-6 animate-pulse pointer-events-none"></i>
+                        </div>
+                        <span class="bg-blue-50 text-blue-800 text-xs font-bold px-2.5 py-1 rounded border border-blue-100">核心價值 Why</span>
+                        <h3 class="text-lg font-extrabold text-slate-900 mt-3 mb-3 tracking-wide">Why 為什麼要舉辦模聯？</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed mb-3">
+                            依照字面上的意思，「模擬聯合國」（Model United Nations, MUN）是一個模擬聯合國會議運作流程的活動。
+                        </p>
+                        <p class="text-slate-505 text-sm leading-relaxed">
+                            但它不僅是角色扮演，更是一個讓學生接觸國際事務的平台。透過研究國際議題、了解不同國家的立場，以及與其他代表協商合作，參與者能培養<strong>批判思考、資料蒐集、溝通表達</strong>等能力。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 卡片二：Who 誰在參加模聯？ -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+                            <i data-lucide="users" class="w-6 h-6 pointer-events-none"></i>
+                        </div>
+                        <span class="bg-amber-50 text-amber-700 text-xs font-bold px-2.5 py-1 rounded border border-amber-100">參與成員 Who</span>
+                        <h3 class="text-lg font-extrabold text-slate-900 mt-3 mb-3 tracking-wide">Who 誰在參加模聯？</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed mb-3">
+                            世界各地許多高中與大學都會舉辦模聯，台灣也不例外。除了學校主辦的大型模聯會議外，由學生社團舉辦的模聯活動也相當普遍。
+                        </p>
+                        <p class="text-slate-505 text-sm leading-relaxed">
+                            一場模聯會議中，除了擔任各國代表的學生外，也有主席、副主席、工作人員與指導老師等角色。其中<strong>主席團</strong>負責主持會議並維持議事流程，是會議順利進行的重要核心。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 卡片三：What 模聯要做些什麼？ -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                            <i data-lucide="layers" class="w-6 h-6 pointer-events-none"></i>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded border border-emerald-100">會議內容 What</span>
+                        <h3 class="text-lg font-extrabold text-slate-900 mt-3 mb-3 tracking-wide">What 模聯要做些什麼？</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed mb-3">
+                            在回答這個問題之前，我們先來簡單介紹聯合國的組成。想必大家都曾聽過安全理事會（Security Council），但除了它之外，聯合國還設有許多不同的委員會與理事會，分別負責安全、經濟、人權、法律等不同領域的國際事務。因此，模聯也會根據不同委員會的職責設計相應的討論議題。
+                        </p>
+                        <p class="text-slate-555 text-sm leading-relaxed">
+                            在會議中，參與者將代表不同國家的外交官，針對議題進行<strong>演說、辯論與協商</strong>，並與其他國家共同撰寫決議案草案，嘗試為國際問題提出可行的解決方案。
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 補充區段：八大委員會與主要討論議題 (表格呈現) -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100 space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                            <span class="w-1.5 h-6 bg-blue-800 rounded"></span>
+                            聯合國主要委員會與議事範疇
+                        </h2>
+                        <p class="text-slate-505 text-xs sm:text-sm mt-1">模擬聯合國會議常設討論機構，根據不同委員會的職責設計相應討論議題。</p>
+                    </div>
+                    <!-- 簡報跳轉外部按鈕 (Top) -->
+                    <a href="https://drive.google.com/file/d/1WmxvVk_2NJAGdpuRf6CUCK3bXLe3tkw8/view?usp=sharing" target="_blank" class="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl hover:from-amber-600 hover:to-amber-700 active:scale-95 shadow-md shadow-amber-500/10 transition-all self-start sm:self-center cursor-pointer">
+                        <i data-lucide="presentation" class="w-4.5 h-4.5 pointer-events-none"></i>
+                        <span>觀看 GA1 & GA2 介紹簡報</span>
+                        <i data-lucide="external-link" class="w-3.5 h-3.5 pointer-events-none"></i>
+                    </a>
+                </div>
+
+                <!-- 響應式表格 -->
+                <div class="overflow-x-auto rounded-xl border border-slate-100">
+                    <table class="min-w-full divide-y divide-slate-100 text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-700 font-bold">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 w-1/4 sm:w-1/3">委員會名稱</th>
+                                <th scope="col" class="px-6 py-4">主要討論領域 / 議題範疇</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-600">
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded pointer-events-none">GA1</span>
+                                        <span class="font-bold text-slate-900 text-xs sm:text-sm pointer-events-none">裁軍與國際安全委員會（DISEC）</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-xs sm:text-sm leading-relaxed pointer-events-none">國際安全、軍備控制、裁軍、反恐</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded pointer-events-none">GA2</span>
+                                        <span class="font-bold text-slate-900 text-xs sm:text-sm pointer-events-none">經濟與金融委員會（ECOFIN）</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-xs sm:text-sm leading-relaxed pointer-events-none">國際經濟、金融合作、貿易與發展</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded pointer-events-none">GA3</span>
+                                        <span class="font-bold text-slate-900 text-xs sm:text-sm pointer-events-none">社會、人道與文化委員會（SOCHUM）</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-xs sm:text-sm leading-relaxed pointer-events-none">人權、難民、教育、婦女與兒童權益</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded pointer-events-none">GA4</span>
+                                        <span class="font-bold text-slate-900 text-xs sm:text-sm pointer-events-none">特別政治與非殖民化委員會（SPECPOL）</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-xs sm:text-sm leading-relaxed pointer-events-none">維和行動、殖民地問題、外太空等特殊政治議題</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded pointer-events-none">GA5</span>
+                                        <span class="font-bold text-slate-900 text-xs sm:text-sm pointer-events-none">行政與預算委員會</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-xs sm:text-sm leading-relaxed pointer-events-none">聯合國預算、行政管理與財務運作</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded pointer-events-none">GA6</span>
+                                        <span class="font-bold text-slate-900 text-xs sm:text-sm pointer-events-none">法律委員會（LEGAL）</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-xs sm:text-sm leading-relaxed pointer-events-none">國際法、網路犯罪、跨國司法合作等法律議題</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/80 transition-colors bg-amber-50/10">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded pointer-events-none">UNSC</span>
+                                        <span class="font-bold text-slate-900 text-xs sm:text-sm pointer-events-none">安全理事會（Security Council）</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-xs sm:text-sm font-medium text-slate-700 leading-relaxed pointer-events-none">戰爭衝突、制裁措施、維持國際和平與安全</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/80 transition-colors bg-emerald-50/10">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded pointer-events-none">ECOSOC</span>
+                                        <span class="font-bold text-slate-900 text-xs sm:text-sm pointer-events-none">經濟及社會理事會（Economic and Social Council）</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-xs sm:text-sm leading-relaxed pointer-events-none">經濟發展、永續發展、公共衛生與國際合作</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 準備工作Check list (Projects Tab) -->
+        <div id="tab-projects" class="tab-content space-y-8 animate-fadeIn">
+            <!-- 標題 -->
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <span class="w-1.5 h-6 bg-blue-800 rounded"></span>
+                    準備工作 Check list
+                </h2>
+                <p class="text-slate-500 text-sm mt-1">進入模擬會議前，各國代表必須完成的階段性學術研究與戰略規劃。</p>
+            </div>
+
+            <!-- 代表國一鍵快速切換器 (僅影響準備工作的文件預覽) -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
+                    <i data-lucide="file-search" class="w-4 h-4 text-blue-800 pointer-events-none"></i>
+                    選擇欲檢視成果的代表國 (切換下方 Checklist 的外部雲端連結來源)
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">此選擇僅會切換本頁下方「檢視成果」時跳轉的專屬 Google Drive 連結，不影響其他頁面。</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button onclick="setProjectCountry('israel')" id="project-preset-israel" class="preset-btn border-2 border-blue-500 bg-blue-50/50 p-4 rounded-xl text-left transition-all hover:bg-blue-50 cursor-pointer">
+                        <div class="font-bold text-sm text-slate-900 flex items-center gap-2 pointer-events-none">
+                            <span>🇮🇱</span>
+                            <span>以色列 Israel</span>
+                        </div>
+                    </button>
+                    <button onclick="setProjectCountry('india')" id="project-preset-india" class="preset-btn border-2 border-transparent bg-slate-50 p-4 rounded-xl text-left transition-all hover:bg-slate-100 cursor-pointer">
+                        <div class="font-bold text-sm text-slate-900 flex items-center gap-2 pointer-events-none">
+                            <span>🇮🇳</span>
+                            <span>印度 India</span>
+                        </div>
+                    </button>
+                    <button onclick="setProjectCountry('japan')" id="project-preset-japan" class="preset-btn border-2 border-transparent bg-slate-50 p-4 rounded-xl text-left transition-all hover:bg-slate-100 cursor-pointer">
+                        <div class="font-bold text-sm text-slate-900 flex items-center gap-2 pointer-events-none">
+                            <span>🇯🇵</span>
+                            <span>日本 Japan</span>
+                        </div>
+                    </button>
+                </div>
+                <!-- 各國代表組員 -->
+                <p class="text-xs text-slate-400 mt-3.5 pl-1 leading-relaxed border-t border-slate-100 pt-3">
+                    <span class="font-semibold text-slate-500">各國代表成員：</span>
+                    以色列 - 一射06吳羿君 一射09周柔蓒 ｜ 
+                    印度 - 一禮04何宥薰 一射01丁苡涵 ｜ 
+                    日本 - 一射18莊淇粟 一御14林冠汝
+                </p>
+            </div>
+
+            <!-- 互動式 Check list 成果展系統 -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i data-lucide="folder-open" class="text-blue-800 pointer-events-none"></i>
+                    準備工作階段成果檢視
+                </h3>
+                <div class="space-y-4">
+                    
+                    <!-- 項目 1: Rules of Procedure -->
+                    <div class="border border-slate-100 rounded-xl overflow-hidden bg-slate-50/50">
+                        <div class="flex items-center justify-between p-4 bg-white border-b border-slate-100">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" checked class="w-5 h-5 rounded border-slate-300 text-blue-600 mt-1 cursor-pointer">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-sm sm:text-base">1. Rules of Procedure 熟悉議事規則</span>
+                                    <p class="text-slate-500 text-xs mt-0.5">理解大會流程（Roll Call、GSL、Moderated/Unmoderated Caucus）與表決程序。</p>
+                                </div>
+                            </div>
+                            <button onclick="toggleWorkAccordion(1)" id="btn-acc-1" class="flex items-center gap-1 text-xs font-semibold text-blue-800 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100/80 transition-all cursor-pointer">
+                                <i data-lucide="eye" class="w-4 h-4 pointer-events-none"></i><span class="btn-text pointer-events-none">檢視成果</span>
+                            </button>
+                        </div>
+                        <!-- 展開區域 1 (結構化整合講稿生存心法與動議速查表) -->
+                        <div id="acc-content-1" class="hidden p-5 bg-white border-b border-slate-100">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-slate-800">
+                                <!-- 講稿口述導覽 -->
+                                <div class="space-y-4">
+                                    <h4 class="font-bold text-blue-900 text-sm sm:text-base flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                                        <i data-lucide="mic" class="w-5 h-5 text-blue-800 animate-pulse pointer-events-none"></i>
+                                        大會規則與生存必備心法
+                                    </h4>
+                                    <p class="text-slate-600 text-sm leading-relaxed">
+                                        參與模擬聯合國，首要任務是熟稔其嚴謹的議事規則。我們將大會規範與現場紀律，提煉為四個外交官核心生存指南：
+                                    </p>
+                                    <ul class="space-y-3 text-xs sm:text-sm">
+                                        <li class="bg-blue-50/40 p-3 rounded-lg border border-blue-100 flex gap-2.5">
+                                            <span class="text-base mt-0.5">👔</span>
+                                            <div>
+                                                <strong class="text-slate-900">外交著裝與風範 (Dress Code)：</strong>
+                                                模聯是一場極其正式的學術外交盛宴，所有代表均須穿著正式商務服裝 (Western Business Attire)，展現外交官的儀態與尊重。
+                                            </div>
+                                        </li>
+                                        <li class="bg-blue-50/40 p-3 rounded-lg border border-blue-100 flex gap-2.5">
+                                            <span class="text-base mt-0.5">🗳️</span>
+                                            <div>
+                                                <strong class="text-slate-900">唱名與出席宣告 (Roll Call)：</strong>
+                                                大會伊始進行唱名，有表決權的會員國代表於被唱名時，須高舉國家牌並自信回應：<span class="text-blue-900 font-semibold">「出席及投票 (Present and Voting)」</span>。
+                                            </div>
+                                        </li>
+                                        <li class="bg-blue-50/40 p-3 rounded-lg border border-blue-100 flex gap-2.5">
+                                            <span class="text-base mt-0.5">🗣️</span>
+                                            <div>
+                                                <strong class="text-slate-900">時間限制與讓渡機制 (Speaking & Yielding)：</strong>
+                                                每位代表通常擁有 1 分鐘的發言時間。發言若有剩餘，可選擇三種時間讓渡：<strong>(1) 交還主席、(2) 讓渡給他國代表、(3) 開放場下提問。</strong><br>
+                                                <span class="text-rose-700 font-semibold">⚠️ 禁忌提醒：發言時嚴禁使用第一與第二人稱 (I, you, we)，代表必須自稱為「本國代表 (This delegate)」或自稱國名。</span>
+                                            </div>
+                                        </li>
+                                        <li class="bg-blue-50/40 p-3 rounded-lg border border-blue-100 flex gap-2.5">
+                                            <span class="text-base mt-0.5">❓</span>
+                                            <div>
+                                                <strong class="text-slate-900">外交質詢與中介對話 (Point of Information)：</strong>
+                                                代表完成發言後，台下代表可高舉國家牌，待主席叫號後依序提出問題。注意<span class="text-amber-700 font-semibold">代表之間嚴禁直接對談</span>，所有發言與追問皆須透過主席代為傳達，並隨時謹守外交禮節。
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <!-- 右側動議速查表 -->
+                                <div class="bg-slate-950 text-slate-200 font-mono text-xs p-5 rounded-xl overflow-x-auto space-y-4 flex flex-col justify-between">
+                                    <div>
+                                        <div class="border-b border-slate-800 pb-2 flex justify-between text-slate-400">
+                                            <span>📄 大會議事規則動議與發言速查表</span>
+                                            <span>通用格式 (ROP Cheat Sheet)</span>
+                                        </div>
+                                        <div class="space-y-3 leading-relaxed mt-3">
+                                            <p class="text-emerald-400">// 代表常用動議 (Motions)：</p>
+                                            <p><strong>1. Motion to set the speaking time (設定發言時間動議)：</strong><br>
+                                               <span class="text-amber-300">「The delegation of [國名] moves to set the speaking time to 90 seconds.」</span></p>
+                                            <p><strong>2. Motion to suspend the meeting for Unmoderated Caucus (提出自由協商動議)：</strong><br>
+                                               <span class="text-amber-300">「The delegation of [國名] moves to suspend the meeting for an unmoderated caucus for 20 minutes for the purpose of drafting working papers.」</span></p>
+                                            <p><strong>3. Motion to open a Moderated Caucus (提出有秩序辯論動議)：</strong><br>
+                                               <span class="text-amber-300">「The delegation of [國名] moves to open a moderated caucus for 10 minutes with a speaking time of 60 seconds per delegate on the sub-topic of 'Microplastic monitoring technologies'.」</span></p>
+                                            <p class="text-emerald-400">// 讓渡時間用語 (Yielding Time)：</p>
+                                            <p>• 讓渡給主席 : <span class="text-amber-300">「We yield our remaining time back to the Dais.」</span><br>
+                                               • 讓渡給其他代表發問 : <span class="text-amber-300">「We yield our remaining time to questions.」</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 項目 2: Research (新增學術指引與 Britannica & BBC 兩大外部研究工具) -->
+                    <div class="border border-slate-100 rounded-xl overflow-hidden bg-slate-50/50">
+                        <div class="flex items-center justify-between p-4 bg-white border-b border-slate-100 flex-wrap gap-2">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" checked class="w-5 h-5 rounded border-slate-300 text-blue-600 mt-1 cursor-pointer">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-sm sm:text-base">2. Research 深入研究代表國家</span>
+                                    <p class="text-slate-505 text-xs mt-0.5">搜集並分析本國在海洋汙染（Marine Debris）議題上的真實立場、統計數據與科學文獻。</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleWorkAccordion(2)" id="btn-acc-2" class="flex items-center gap-1 text-xs font-semibold text-blue-800 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100/80 transition-all cursor-pointer">
+                                    <i data-lucide="book-open" class="w-4 h-4 pointer-events-none"></i><span class="btn-text pointer-events-none">學術指引</span>
+                                </button>
+                                <!-- 已優化為 HTML <a> 標籤，完美支持平板及任何平台沙盒嵌入 -->
+                                <a id="btn-link-research" href="" onclick="handleLinkClick(event, 'research')" class="flex items-center gap-1.5 text-xs font-semibold text-blue-800 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100/80 transition-all border border-blue-200 cursor-pointer">
+                                    <i data-lucide="external-link" class="w-4 h-4 pointer-events-none"></i><span>檢視成果</span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 展開區域 2 (如何進行國家研究，並附上精選外部連結按鈕) -->
+                        <div id="acc-content-2" class="hidden p-5 bg-white border-b border-slate-100 space-y-5">
+                            <div class="space-y-2">
+                                <h4 class="font-bold text-blue-900 text-sm sm:text-base flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                                    <i data-lucide="search" class="w-5 h-5 text-blue-800 pointer-events-none"></i>
+                                    國家研究 (Country Research) 指引與資源
+                                </h4>
+                                <p class="text-slate-600 text-sm leading-relaxed mt-2">
+                                    要參加模聯，除了對討論的議題要有扎實的了解外，也必須熟悉自己國家的狀況。這就必須進行深入的 <strong>Country Research</strong>。代表們必須深入了解本國的歷史發展、政治體制、經濟結構和國際外交政策，以確保在會議中能精確地代表國家的真實利益。
+                                </p>
+                                <p class="text-slate-505 text-xs sm:text-sm">我們強烈推薦代表們善用以下兩個國際權威網站，作為建立國家背景知識的首選工具：</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                                <!-- 大英百科連結卡片 -->
+                                <a href="https://www.britannica.com/editor/World-Data-Editors/7705612" target="_blank" class="p-4 bg-slate-50 hover:bg-blue-50/50 border border-slate-100 hover:border-blue-200 rounded-xl transition-all flex flex-col justify-between group">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-lg pointer-events-none">📚</span>
+                                            <span class="font-bold text-slate-900 text-sm group-hover:text-blue-900 transition-colors pointer-events-none">Britannica's World Data Service</span>
+                                        </div>
+                                        <p class="text-slate-505 text-xs leading-relaxed pointer-events-none">
+                                            提供極其詳盡的全球國家數據與統計年報。包含各國經濟結構、社會發展指標以及各產業統計數據，是研究國家背景的頂尖學術工具。
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-1 text-xs font-bold text-blue-800 mt-4 self-end pointer-events-none">
+                                        <span>前往網站研究</span>
+                                        <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                                    </div>
+                                </a>
+
+                                <!-- BBC 國家概況連結卡片 -->
+                                <a href="http://news.bbc.co.uk/2/hi/country_profiles/default.stm" target="_blank" class="p-4 bg-slate-50 hover:bg-blue-50/50 border border-slate-100 hover:border-blue-200 rounded-xl transition-all flex flex-col justify-between group">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-lg pointer-events-none">📰</span>
+                                            <span class="font-bold text-slate-900 text-sm group-hover:text-blue-900 transition-colors pointer-events-none">BBC Country Profile</span>
+                                        </div>
+                                        <p class="text-slate-505 text-xs leading-relaxed pointer-events-none">
+                                            BBC 提供的國家與地區深度專題報告。能幫助代表快速理解國家歷史大事記、關鍵領導人背景、政治概況以及當前社會現況。
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-1 text-xs font-bold text-blue-800 mt-4 self-end pointer-events-none">
+                                        <span>前往網站研究</span>
+                                        <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 項目 3: Position Paper -->
+                    <div class="border border-slate-100 rounded-xl overflow-hidden bg-slate-50/50">
+                        <div class="flex items-center justify-between p-4 bg-white border-b border-slate-100">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" checked class="w-5 h-5 rounded border-slate-300 text-blue-600 mt-1 cursor-pointer">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-sm sm:text-base">3. Position Paper 闡述立場的文件</span>
+                                    <p class="text-slate-500 text-xs mt-0.5">撰寫立場文件，精準點出代表國面對塑料垃圾與海廢污染時的解決方案。</p>
+                                </div>
+                            </div>
+                            <!-- 已優化為 HTML <a> 標籤，完美支持平板及任何平台沙盒嵌入 -->
+                            <a id="btn-link-position" href="" onclick="handleLinkClick(event, 'position')" class="flex items-center gap-1.5 text-xs font-semibold text-blue-800 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100/80 transition-all border border-blue-200 cursor-pointer">
+                                <i data-lucide="external-link" class="w-4 h-4 pointer-events-none"></i><span class="pointer-events-none">檢視成果</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 項目 4: Working Paper -->
+                    <div class="border border-slate-100 rounded-xl overflow-hidden bg-slate-50/50">
+                        <div class="flex items-center justify-between p-4 bg-white border-b border-slate-100">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" checked class="w-5 h-5 rounded border-slate-300 text-blue-600 mt-1 cursor-pointer">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-sm sm:text-base">4. Working Paper 提案草稿</span>
+                                    <p class="text-slate-500 text-xs mt-0.5">與盟友起草工作文件草案，將談判共識化為決議案條款。</p>
+                                </div>
+                            </div>
+                            <!-- 已優化為 HTML <a> 標籤，完美支持平板及任何平台沙盒嵌入 -->
+                            <a id="btn-link-working" href="" onclick="handleLinkClick(event, 'working')" class="flex items-center gap-1.5 text-xs font-semibold text-blue-800 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100/80 transition-all border border-blue-200 cursor-pointer">
+                                <i data-lucide="external-link" class="w-4 h-4 pointer-events-none"></i><span class="pointer-events-none">檢視成果</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 項目 5: Opening speech -->
+                    <div class="border border-slate-100 rounded-xl overflow-hidden bg-slate-50/50">
+                        <div class="flex items-center justify-between p-4 bg-white border-b border-slate-100">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" checked class="w-5 h-5 rounded border-slate-300 text-blue-600 mt-1 cursor-pointer">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-sm sm:text-base">5. Opening speech 準備講稿</span>
+                                    <p class="text-slate-500 text-xs mt-0.5">撰寫大會開幕 90 秒發言講稿，尋求國際同盟與多邊合作。</p>
+                                </div>
+                            </div>
+                            <!-- 已優化為 HTML <a> 標籤，完美支持平板及任何平台沙盒嵌入 -->
+                            <a id="btn-link-speech" href="" onclick="handleLinkClick(event, 'speech')" class="flex items-center gap-1.5 text-xs font-semibold text-blue-800 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100/80 transition-all border border-blue-200 cursor-pointer">
+                                <i data-lucide="external-link" class="w-4 h-4 pointer-events-none"></i><span class="pointer-events-none">檢視成果</span>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 心得與反思 (Reflection Tab) -->
+        <div id="tab-reflection" class="tab-content space-y-8 animate-fadeIn">
+            
+            <!-- 上半部：報告小組素養六角雷達圖與指標說明 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- 雷達圖卡片 -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center justify-center">
+                    <div class="w-full mb-2">
+                        <h2 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2 pointer-events-none">
+                            <span class="w-1.5 h-6 bg-blue-800 rounded"></span>
+                            報告小組核心素養
+                        </h2>
+                        <p class="text-xs text-slate-400 pointer-events-none">本圖繪製我們小組（丁苡涵、吳羿君、周柔蓒、林冠汝）在課程中的核心能力提升：</p>
+                    </div>
+                    
+                    <div class="relative w-full max-w-[240px] aspect-square flex items-center justify-center my-2 pointer-events-none">
+                        <!-- SVG 六角雷達圖 (中心點 50,50 基準) -->
+                        <svg viewBox="0 0 100 100" class="w-full h-full">
+                            <!-- 背景蜘蛛網線 - Concentric Hexagons -->
+                            <polygon points="50,10 84.6,30 84.6,70 50,90 15.4,70 15.4,30" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>
+                            <polygon points="50,20 76.0,35 76.0,65 50,80 24.0,65 24.0,35" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>
+                            <polygon points="50,30 67.3,40 67.3,60 50,70 32.7,60 32.7,40" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>
+                            <polygon points="50,40 58.7,45 58.7,55 50,60 41.3,55 41.3,45" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>
+                            
+                            <!-- 軸線 (Concentric Axes) -->
+                            <line x1="50" y1="50" x2="50" y2="10" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="2"/>
+                            <line x1="50" y1="50" x2="84.6" y2="30" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="2"/>
+                            <line x1="50" y1="50" x2="84.6" y2="70" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="2"/>
+                            <line x1="50" y1="50" x2="50" y2="90" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="2"/>
+                            <line x1="50" y1="50" x2="15.4" y2="70" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="2"/>
+                            <line x1="50" y1="50" x2="15.4" y2="30" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="2"/>
+                            
+                            <!-- 報告小組整體能力多邊形 (藍色實線) -->
+                            <polygon points="50,16 77.7,34 77.7,66 50,84 18.8,68 18.8,32" fill="rgba(19, 64, 116, 0.16)" stroke="#134074" stroke-width="1.8"/>
+                            
+                            <!-- 頂點圓圈 -->
+                            <circle cx="50" cy="16" r="2.5" fill="#134074"/>
+                            <circle cx="77.7" cy="34" r="2.5" fill="#134074"/>
+                            <circle cx="77.7" cy="66" r="2.5" fill="#134074"/>
+                            <circle cx="50" cy="84" r="2.5" fill="#134074"/>
+                            <circle cx="18.8" cy="68" r="2.5" fill="#134074"/>
+                            <circle cx="18.8" cy="32" r="2.5" fill="#134074"/>
+                        </svg>
+                        
+                        <!-- 外圍標籤文字 -->
+                        <div class="absolute top-[1%] text-xs font-bold text-slate-700 bg-blue-50 px-1 py-0.5 rounded border border-blue-200 pointer-events-none">#口語表達</div>
+                        <div class="absolute right-[-4%] top-[25%] text-xs font-bold text-slate-700 bg-blue-50 px-1 py-0.5 rounded border border-blue-200 pointer-events-none">#英文能力培養</div>
+                        <div class="absolute right-[-4%] bottom-[25%] text-xs font-bold text-slate-700 bg-blue-50 px-1 py-0.5 rounded border border-blue-200 pointer-events-none">#團隊合作</div>
+                        <div class="absolute bottom-[1%] text-xs font-bold text-slate-700 bg-blue-50 px-1 py-0.5 rounded border border-blue-200 pointer-events-none">#問題解決</div>
+                        <div class="absolute left-[-4%] bottom-[25%] text-xs font-bold text-slate-700 bg-blue-50 px-1 py-0.5 rounded border border-blue-200 pointer-events-none">#國際視野</div>
+                        <div class="absolute left-[-4%] top-[25%] text-xs font-bold text-slate-700 bg-blue-50 px-1 py-0.5 rounded border border-blue-200 pointer-events-none">#批判思考</div>
+                    </div>
+
+                    <!-- 雷達圖對比圖例 -->
+                    <div class="flex justify-center gap-3 mt-1 pb-2 text-xs font-semibold border-t border-slate-100 w-full pt-2">
+                        <span class="flex items-center gap-1 text-blue-900 pointer-events-none"><span class="w-2.5 h-1.5 bg-[#134074] inline-block rounded-sm"></span> 報告小組整體素養指標</span>
+                    </div>
+                </div>
+
+                <!-- 素養分析與指標說明 (報告小組專屬) -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 lg:col-span-2 space-y-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-1.5">
+                                <i data-lucide="activity" class="text-blue-800 pointer-events-none"></i>
+                                報告小組核心素養分析
+                            </h2>
+                        </div>
+
+                        <!-- 報告小組分析內容 -->
+                        <div class="space-y-4 mt-4">
+                            <h3 class="text-base font-bold text-blue-900">一射01丁苡涵、一射06吳羿君、一射09周柔蓒、一御14林冠汝 報告小組</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed min-h-[72px]">
+                                我們小組在本次模擬聯合國多元選修課程中，透過扮演不同國家、協商不同立場，獲得了全方位的素養提升。在國際視野的建立、議題的批判思考，以及團隊合作的實踐上，都展現出顯著的成長。
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex gap-2">
+                            <div class="text-blue-800 mt-1"><i data-lucide="trending-up" class="w-5 h-5 pointer-events-none"></i></div>
+                            <div>
+                                <h4 class="font-bold text-xs text-slate-800">小組優勢亮點</h4>
+                                <p class="text-slate-555 text-xs mt-1 leading-relaxed">跨學科的批判思考與卓越的團隊協調能力，能在複雜的多邊外交模擬中迅速討論出共識，並協力完成高品質的學術產出。</p>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex gap-2">
+                            <div class="text-amber-600 mt-1"><i data-lucide="shield-alert" class="w-5 h-5 pointer-events-none"></i></div>
+                            <div>
+                                <h4 class="font-bold text-xs text-slate-800">未來鍛鍊空間</h4>
+                                <p class="text-slate-555 text-xs mt-1 leading-relaxed">在極短的 ROP 大會議事規則時間限制下，口語即席辯論與英文講稿草詞撰寫的流喚度，仍有持續精進與挑戰的空間。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 下半部：我們的 MUN 旅程與反思筆記 -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100 space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-blue-800 rounded"></span>
+                        成果展心得
+                    </h2>
+                    <p class="text-slate-500 text-sm mt-1">在一學期上完「暢遊世界—參加模擬聯合國會議」的課程後，我們學習與收穫到了許多寶貴的經歷：</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-blue-800 pl-4 space-y-1.5">
+                            <span class="text-xs font-bold text-blue-800 uppercase tracking-wider">01. 團隊合作：溝通、協調與高效分工</span>
+                            <p class="text-slate-600 text-sm leading-relaxed">
+                                在課程中常常有需要分組和組員一起合作的作業，我們從中學習如何溝通協調，彼此磨合，互相尊重對方的想法，並且練習適當的分工，讓我們的作業可以更有效率的完成。
+                            </p>
+                        </div>
+                        <div class="border-l-4 border-amber-500 pl-4 space-y-1.5">
+                            <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">02. 國際視野：拓展宏觀角度，看見全球時事</span>
+                            <p class="text-slate-600 text-sm leading-relaxed">
+                                在課程的剛開始，老師有教導我們如何尋找國際時事，透過固定時間的上網搜尋國際新聞，我們可以拓展我們的國際視野，更加認識除了我們生活之處以外的地方。視野的擴展也讓我們認識到自己可以多加學習的地方，並且做出調整。
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-emerald-500 pl-4 space-y-1.5">
+                            <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">03. 思辨能力：在資訊演進快速的時代站穩腳跟</span>
+                            <p class="text-slate-600 text-sm leading-relaxed">
+                                我們透過課程學習到，網路上的新聞和網站並不可以完全地相信，AI 是很好的輔助工具，但一樣是需要自己分辨真偽，要在透過多方求證後，再下結論。我們要練習思考與辨別，就算在這個資訊演進快速的時代，我們一樣要站穩腳跟，不要被盲目地帶著走。
+                            </p>
+                        </div>
+                        <div class="border-l-4 border-rose-600 pl-4 space-y-1.5">
+                            <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">04. 英文能力培養：克服畏懼，建立自信表達的勇氣</span>
+                            <p class="text-slate-600 text-sm leading-relaxed">
+                                由於模擬聯合國的文件和流程大部分都是使用英文，我們可以在練習參與會議的同時，也精進我們的英語能力。雖然這個不是直接的關係，但是試著接觸英文，可以讓我們更有使用英文演講的勇氣，也增加我們使用英語的信心。培養英語能力也可以幫助我們在未來使用英語分享時，可以更加自信地表達出自己的想法。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 text-xs text-center mt-auto">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="un-blue-bg p-1.5 rounded text-white">
+                        <i data-lucide="globe" class="w-4 h-4 text-amber-300 pointer-events-none"></i>
+                    </div>
+                    <span class="font-semibold text-slate-200">MUN 模擬聯合國 生存指南成果網</span>
+                </div>
+                <p>© 114學年度多元選修課程 - 一射01丁苡涵、一射06吳羿君、一射09周柔蓒、一御14林冠汝 代表團</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 高階無干擾氣泡提示 (Toast Notification) -->
+    <div id="toast" class="hidden fixed bottom-5 right-5 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3.5 rounded-xl shadow-xl z-50 flex items-center gap-2.5 border border-slate-800 transition-all duration-300">
+        <i data-lucide="alert-circle" class="w-5 h-5 text-amber-400 pointer-events-none"></i>
+        <div class="flex flex-col">
+            <span id="toast-text" class="text-xs font-bold text-slate-100">文件尚未上傳</span>
+            <span class="text-xs text-slate-400 mt-0.5">代表團尚未上傳此項學術成果，敬請期待！</span>
+        </div>
+    </div>
+
+    <!-- 腳本區域 -->
+    <script>
+        // 初始化 Lucide 圖標
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            // 初始化獨立分頁狀態與連結
+            setProjectCountry('israel');
+            adjustLayoutForWidth();
+        });
+
+        // 頁籤切換邏輯
+        function switchTab(tabId) {
+            // 所有內容隱藏，移除 active
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            // 顯示當前選定的 Tab
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            // 桌面版按鈕樣式更新
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer";
+            });
+            const activeDesktopBtn = document.getElementById(`btn-${tabId}`);
+            if (activeDesktopBtn) {
+                activeDesktopBtn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium text-blue-800 bg-blue-50 transition-all cursor-pointer";
+            }
+
+            // 行動版按鈕樣式更新
+            document.querySelectorAll('[id^="m-btn-"]').forEach(btn => {
+                btn.className = "flex flex-col items-center text-slate-400 cursor-pointer";
+            });
+            const activeMobileBtn = document.getElementById(`m-btn-${tabId}`);
+            if (activeMobileBtn) {
+                activeMobileBtn.className = "flex flex-col items-center text-blue-800 cursor-pointer";
+            }
+
+            // 重新讀取 Lucide 確保 icon 在重新渲染後正常顯示
+            lucide.createIcons();
+            
+            // 手機版切換時自動滾動回頂部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Checklist 手風琴折疊展開 (相容於 1 與 2 的多重展開)
+        function toggleWorkAccordion(id) {
+            const content = document.getElementById(`acc-content-${id}`);
+            const btn = document.getElementById(`btn-acc-${id}`);
+            const textSpan = btn.querySelector('.btn-text');
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                if (id === 1) {
+                    textSpan.innerText = '收合成果';
+                    btn.className = "flex items-center gap-1 text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-2 rounded-lg hover:bg-slate-200 transition-all cursor-pointer";
+                } else {
+                    textSpan.innerText = '收合指引';
+                    btn.className = "flex items-center gap-1 text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-2 rounded-lg hover:bg-slate-200 transition-all cursor-pointer";
+                }
+            } else {
+                content.classList.add('hidden');
+                if (id === 1) {
+                    textSpan.innerText = '檢視成果';
+                    btn.className = "flex items-center gap-1 text-xs font-semibold text-blue-800 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100/80 transition-all cursor-pointer";
+                } else {
+                    textSpan.innerText = '學術指引';
+                    btn.className = "flex items-center gap-1 text-xs font-semibold text-blue-800 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100/80 transition-all cursor-pointer";
+                }
+            }
+            lucide.createIcons();
+        }
+
+        // 真實外部 Google Drive 成果資料庫連結
+        const countryLinks = {
+            israel: {
+                research: "https://drive.google.com/file/d/1HDUicxwXB2VDR8_1JszWlClPnqm11a5Z/view?usp=drive_link",
+                position: "https://drive.google.com/file/d/1pMlOnoSVVNpYWYk7ddLk-CalDr3BAjjY/view?usp=drive_link",
+                working: "https://drive.google.com/file/d/1wxtPiA2J8uoN2l_2rat_MawicSQsp7ag/view?usp=drive_link",
+                speech: "https://drive.google.com/file/d/1hqAFhOIY5zVuWFLM7nfMMoxPgWH3lUJM/view?usp=drive_link"
+            },
+            japan: {
+                research: "",
+                position: "https://drive.google.com/file/d/1MSRn5mLkKivBraFUmrbGqXrcf7AZFOlf/view?usp=sharing",
+                working: "https://drive.google.com/file/d/1DfkQH6MQdgEAEbJUKtvdolK3iKm3b9zZ/view?usp=sharing",
+                speech: "https://drive.google.com/file/d/1siLbkCzNcn1bV7cUxVHW18_mc7CO8ss5/view?usp=sharing"
+            },
+            india: {
+                research: "",
+                position: "",
+                working: "",
+                speech: "https://drive.google.com/file/d/1BgnbITI-MnKcDl2uCWupnJJ8Wzb8j8AD/view?usp=sharing"
+            }
+        };
+
+        // 三國對應名稱 (提示用)
+        const countryNames = {
+            israel: "🇮🇱 以色列 Israel",
+            india: "🇮🇳 印度 India",
+            japan: "🇯🇵 日本 Japan"
+        };
+
+        // 獨立分頁狀態管理
+        let currentProjectCountry = 'israel';     // 準備工作分頁的國家狀態
+
+        // 核心更新功能：當國家改變時，動態將對應的 Google Drive 網址設定給原生 <a> 標籤
+        function updateProjectLinks() {
+            const countryStore = countryLinks[currentProjectCountry];
+            const docTypes = ['research', 'position', 'working', 'speech'];
+            docTypes.forEach(type => {
+                const linkEl = document.getElementById(`btn-link-${type}`);
+                if (linkEl) {
+                    const url = countryStore[type];
+                    if (url && url.trim() !== "") {
+                        linkEl.setAttribute('href', url);
+                        linkEl.setAttribute('target', '_blank');
+                    } else {
+                        linkEl.removeAttribute('href');
+                        linkEl.removeAttribute('target');
+                    }
+                }
+            });
+        }
+
+        // 智慧容器寬度監聽器 (解決 Google Sites, Notion, 平板等 Iframe 寬度重疊問題)
+        function adjustLayoutForWidth() {
+            // 監聽當前網頁所在的嵌入容器實際寬度，而非硬體螢幕寬度
+            const currentWidth = window.innerWidth;
+            const desktopMenu = document.getElementById('desktop-menu');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const delegateContainer = document.getElementById('nav-delegate-container');
+
+            if (currentWidth < 768) {
+                // 寬度小於 768px (手機或窄版 iframe 嵌入)
+                if (desktopMenu) desktopMenu.classList.replace('md:flex', 'hidden');
+                if (mobileMenu) {
+                    mobileMenu.classList.remove('hidden');
+                    mobileMenu.classList.add('flex');
+                }
+                if (delegateContainer) delegateContainer.classList.add('hidden');
+            } else {
+                // 寬度大於等於 768px (平板或桌面電腦)
+                if (desktopMenu) {
+                    desktopMenu.classList.remove('hidden');
+                    desktopMenu.classList.add('md:flex');
+                }
+                if (mobileMenu) {
+                    mobileMenu.classList.remove('flex');
+                    mobileMenu.classList.add('hidden');
+                }
+                
+                // 大於 1024px 且空間充裕時，才在導覽列右側大方顯示組員名單，防止重疊
+                if (delegateContainer) {
+                    if (currentWidth < 1024) {
+                        delegateContainer.classList.add('hidden');
+                    } else {
+                        delegateContainer.classList.remove('hidden');
+                        delegateContainer.classList.add('flex');
+                    }
+                }
+            }
+        }
+
+        // 設定【準備工作】分頁的國家預設
+        function setProjectCountry(countryKey) {
+            currentProjectCountry = countryKey;
+            
+            // 更新本頁一鍵體驗按鈕樣式
+            document.querySelectorAll('[id^="project-preset-"]').forEach(btn => {
+                btn.className = "preset-btn border-2 border-transparent bg-slate-50 p-4 rounded-xl text-left transition-all hover:bg-slate-100 cursor-pointer";
+            });
+            const activeBtn = document.getElementById(`project-preset-${countryKey}`);
+            if (activeBtn) {
+                activeBtn.className = "preset-btn border-2 border-blue-500 bg-blue-50/50 p-4 rounded-xl text-left transition-all hover:bg-blue-50 cursor-pointer";
+            }
+
+            // 更新實際 <a> 超連結連結
+            updateProjectLinks();
+
+            // 提供一瞬間視覺微調回饋
+            const container = document.getElementById('tab-projects');
+            const originalBg = container.style.backgroundColor;
+            container.style.backgroundColor = 'rgba(239, 246, 255, 0.4)';
+            setTimeout(() => {
+                container.style.backgroundColor = originalBg;
+            }, 300);
+        }
+
+        // 用於接管「未上傳成果」之點擊防錯事件
+        function handleLinkClick(event, docType) {
+            const countryStore = countryLinks[currentProjectCountry];
+            const url = countryStore[docType];
+            
+            // 若為空白連結，則阻止預設的外跳行為，並顯示 Toast 提示
+            if (!url || url.trim() === "") {
+                event.preventDefault(); 
+                const countryName = countryNames[currentProjectCountry];
+                let docTypeName = "";
+                if (docType === 'research') docTypeName = "國家背景研究報告";
+                if (docType === 'position') docTypeName = "國家立場文件 Position Paper";
+                if (docType === 'working') docTypeName = "工作決議草案 Working Paper";
+                if (docType === 'speech') docTypeName = "開場發言講稿 Opening Speech";
+
+                triggerToast(`${countryName} 尚未上傳 ${docTypeName}`);
+            }
+        }
+
+        // 自訂氣泡提示動畫控制
+        let toastTimeout = null;
+        function triggerToast(message) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            
+            toastText.innerText = message;
+            
+            // 清除之前的計時器
+            if (toastTimeout) {
+                clearTimeout(toastTimeout);
+            }
+
+            toast.classList.remove('hidden');
+            
+            // 3秒後自動收合
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // 監聽視窗和嵌入容器大小
+        window.addEventListener('resize', adjustLayoutForWidth);
+    </script>
+</body>
+</html>
